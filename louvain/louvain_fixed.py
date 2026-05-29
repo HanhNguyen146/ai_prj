@@ -39,14 +39,14 @@ KNN_METRIC                = 'cosine'
 ALPHA = 0.5
 
 # -----------------------------------------------------------------------------
-# PCA WHITENING  (dùng chung cho cả 2 phase)
+# PCA WHITENING  (chỉ dùng cho PHASE 2 - Fine-tuned)
 # -----------------------------------------------------------------------------
 USE_PCA    = True
 PCA_DIM    = 256
 PCA_WHITEN = True
 
 # -----------------------------------------------------------------------------
-# LOUVAIN  (dùng chung cho cả 2 phase)
+# LOUVAIN  (chỉ dùng cho PHASE 2 - Fine-tuned)
 # -----------------------------------------------------------------------------
 AUTO_TUNE_RESOLUTION = True    # tự tìm resolution để n_clusters ≈ n_gt
 RESOLUTION_TOLERANCE = 0.10    # chấp nhận sai số ±10% so với n_gt_classes
@@ -54,12 +54,13 @@ N_SEEDS              = 5
 USE_CONSENSUS        = False
 
 # -----------------------------------------------------------------------------
-# POST-PROCESSING  (dùng chung cho cả 2 phase)
+# POST-PROCESSING  (chỉ dùng cho PHASE 2 - Fine-tuned)
 # -----------------------------------------------------------------------------
 MIN_CLUSTER_SIZE = 5
 
 # -----------------------------------------------------------------------------
 # PHASE 1 — BASELINE
+# Cấu hình tối giản: không PCA, 1 seed, không merge, γ=1.0 cố định
 # -----------------------------------------------------------------------------
 BASELINE_K_NEIGHBORS = 20
 BASELINE_THRESHOLD   = 0.30
@@ -125,27 +126,29 @@ def load_features_and_dataset():
     return features, gt_raw, gt_labels, english_labels, ds, N, n_gt_classes
 
 
-def preprocess_features(features):
-    """L2 normalize → (optional) PCA whitening → re-normalize."""
+def l2_normalize(features):
+    """Chỉ L2 normalize, không PCA."""
     norms = np.linalg.norm(features, axis=1)
     if np.allclose(norms, 1.0, atol=1e-4):
         print("--> Features đã L2-normalized, bỏ qua bước normalize.")
-        feat = features.copy()
-    else:
-        print(f"--> Norms: min={norms.min():.4f}, max={norms.max():.4f}. Đang normalize…")
-        feat = features / (norms[:, None] + 1e-10)
-    feat = feat.astype(np.float32)
+        return features.copy().astype(np.float32)
+    print(f"--> Norms: min={norms.min():.4f}, max={norms.max():.4f}. Đang normalize…")
+    return (features / (norms[:, None] + 1e-10)).astype(np.float32)
 
-    if USE_PCA:
-        n_comp = PCA_DIM if PCA_DIM else feat.shape[1]
-        print(f"--> PCA Whitening: {feat.shape[1]}d → {n_comp}d …")
-        t_pca  = time.time()
-        pca    = PCA(n_components=n_comp, whiten=PCA_WHITEN, random_state=42)
-        feat   = pca.fit_transform(feat).astype(np.float32)
-        norms2 = np.linalg.norm(feat, axis=1, keepdims=True)
-        feat   = feat / (norms2 + 1e-10)
-        print(f"--> Explained variance: {pca.explained_variance_ratio_.sum():.3f}  |  "
-              f"Time: {time.time()-t_pca:.1f}s")
+
+def preprocess_features_tuned(features):
+    """L2 normalize → PCA whitening → re-normalize. Dùng cho Phase 2."""
+    feat = l2_normalize(features)
+
+    n_comp = PCA_DIM if PCA_DIM else feat.shape[1]
+    print(f"--> PCA Whitening: {feat.shape[1]}d → {n_comp}d …")
+    t_pca  = time.time()
+    pca    = PCA(n_components=n_comp, whiten=PCA_WHITEN, random_state=42)
+    feat   = pca.fit_transform(feat).astype(np.float32)
+    norms2 = np.linalg.norm(feat, axis=1, keepdims=True)
+    feat   = feat / (norms2 + 1e-10)
+    print(f"--> Explained variance: {pca.explained_variance_ratio_.sum():.3f}  |  "
+          f"Time: {time.time()-t_pca:.1f}s")
     return feat
 
 
@@ -221,22 +224,22 @@ def auto_tune_resolution(G, n_gt_classes):
     return best_res
 
 
-def run_multi_seed_louvain(G, resolution, N):
-    """Chạy Louvain N_SEEDS lần → consensus hoặc chọn modularity cao nhất."""
+def run_multi_seed_louvain(G, resolution, N, n_seeds):
+    """Chạy Louvain n_seeds lần → chọn partition có modularity cao nhất."""
     t2             = time.time()
     all_partitions = []
-    for seed in range(N_SEEDS):
+    for seed in range(n_seeds):
         p   = _run_louvain_once(G, resolution, seed=seed * 7 + 42)
         mod = community_louvain.modularity(p, G, weight="weight")
         print(f"  seed={seed*7+42:3d}  →  {len(set(p.values()))} clusters  |  modularity={mod:.4f}")
         all_partitions.append(p)
 
-    if USE_CONSENSUS:
+    if USE_CONSENSUS and n_seeds > 1:
         co_assoc = np.zeros((N, N), dtype=np.float32)
         for p in all_partitions:
             labels_p  = np.array([p[i] for i in range(N)])
             co_assoc += (labels_p[:, None] == labels_p[None, :]).astype(np.float32)
-        co_assoc /= N_SEEDS
+        co_assoc /= n_seeds
         G_cons = nx.Graph()
         G_cons.add_nodes_from(range(N))
         rows, cols_idx = np.where(co_assoc > 0.5)
@@ -257,14 +260,14 @@ def run_multi_seed_louvain(G, resolution, N):
     return louvain_labels, final_partition, time.time() - t2
 
 
-def merge_small_clusters(louvain_labels, feat):
-    """Merge cluster < MIN_CLUSTER_SIZE vào nearest centroid."""
-    if MIN_CLUSTER_SIZE <= 1:
+def merge_small_clusters(louvain_labels, feat, min_size):
+    """Merge cluster < min_size vào nearest centroid."""
+    if min_size <= 1:
         return louvain_labels
     unique_cls     = np.unique(louvain_labels)
     centroids      = {c: feat[louvain_labels == c].mean(axis=0) for c in unique_cls}
-    small_cls      = [c for c in unique_cls if (louvain_labels == c).sum() < MIN_CLUSTER_SIZE]
-    large_cls      = [c for c in unique_cls if (louvain_labels == c).sum() >= MIN_CLUSTER_SIZE]
+    small_cls      = [c for c in unique_cls if (louvain_labels == c).sum() < min_size]
+    large_cls      = [c for c in unique_cls if (louvain_labels == c).sum() >= min_size]
     if small_cls and large_cls:
         large_centroids = np.array([centroids[c] for c in large_cls])
         for c in small_cls:
@@ -382,24 +385,26 @@ def plot_size_distribution(cluster_to_ids, sorted_clusters, n_clusters,
 
 def _run_one_config(feat, N, gt_labels, english_labels, ds,
                     k_neighbors, threshold, mutual_knn,
-                    output_folder, viz_file, phase_label):
+                    output_folder, viz_file, phase_label,
+                    auto_tune, resolution_fixed, n_seeds, min_cluster_size):
     """Pipeline hoàn chỉnh cho 1 bộ tham số. Trả về dict kết quả."""
     # Graph
     G, t_graph = build_knn_graph(feat, N, k_neighbors, threshold, mutual_knn)
 
-    # Auto-tune resolution
-    resolution = 1.0
-    if AUTO_TUNE_RESOLUTION:
+    # Resolution
+    if auto_tune:
         resolution = auto_tune_resolution(G, len(np.unique(gt_labels)))
     else:
+        resolution = resolution_fixed
         print(f"--> Dùng Resolution={resolution} (không auto-tune)")
 
     # Multi-seed Louvain
-    louvain_labels, final_partition, t_louvain = run_multi_seed_louvain(G, resolution, N)
+    louvain_labels, final_partition, t_louvain = run_multi_seed_louvain(
+        G, resolution, N, n_seeds=n_seeds)
     n_raw = len(np.unique(louvain_labels))
 
     # Merge small clusters
-    louvain_labels = merge_small_clusters(louvain_labels, feat)
+    louvain_labels = merge_small_clusters(louvain_labels, feat, min_size=min_cluster_size)
     n_clusters     = len(np.unique(louvain_labels))
 
     # Evaluate
@@ -463,21 +468,30 @@ def _run_one_config(feat, N, gt_labels, english_labels, ds,
 
 # =============================================================================
 # PHASE 1: BASELINE
+# Cấu hình tối giản: không PCA, γ=1.0 cố định, 1 seed, không merge cụm nhỏ
 # =============================================================================
-def run_baseline(feat, N, gt_labels, english_labels, ds):
+def run_baseline(features_raw, N, gt_labels, english_labels, ds):
     print("\n" + "="*80)
     print("PHASE 1: BASELINE")
+    print("[INFO] Baseline: không PCA, γ=1.0, 1 seed, không merge cụm nhỏ")
     print("="*80)
     t_start = time.time()
 
+    # Chỉ L2 normalize, không PCA
+    feat_baseline = l2_normalize(features_raw)
+
     result = _run_one_config(
-        feat, N, gt_labels, english_labels, ds,
-        k_neighbors  = BASELINE_K_NEIGHBORS,
-        threshold    = BASELINE_THRESHOLD,
-        mutual_knn   = BASELINE_MUTUAL_KNN,
-        output_folder= BASELINE_FOLDER,
-        viz_file     = BASELINE_VIZ_FILE,
-        phase_label  = "BASELINE",
+        feat_baseline, N, gt_labels, english_labels, ds,
+        k_neighbors      = BASELINE_K_NEIGHBORS,
+        threshold        = BASELINE_THRESHOLD,
+        mutual_knn       = BASELINE_MUTUAL_KNN,
+        output_folder    = BASELINE_FOLDER,
+        viz_file         = BASELINE_VIZ_FILE,
+        phase_label      = "BASELINE",
+        auto_tune        = False,       # γ=1.0 cố định
+        resolution_fixed = 1.0,
+        n_seeds          = 1,           # 1 seed
+        min_cluster_size = 0,           # không merge
     )
 
     np.save('louvain_baseline_labels.npy', result["labels"])
@@ -487,14 +501,17 @@ def run_baseline(feat, N, gt_labels, english_labels, ds):
 
 # =============================================================================
 # PHASE 2: FULL TUNING
+# PCA Whitening 256D, auto-tune γ, N_seeds=5, MinSize=5
 # =============================================================================
-def run_tuning(feat, N, gt_labels, english_labels, ds):
+def run_tuning(feat_tuned, N, gt_labels, english_labels, ds):
     total_runs = (len(TUNING_K_NEIGHBORS_LIST) *
                   len(TUNING_THRESHOLD_LIST)   *
                   len(TUNING_MUTUAL_KNN_LIST))
 
     print("\n" + "="*80)
     print("PHASE 2: FULL TUNING")
+    print(f"[INFO] Tuned: PCA Whitening {PCA_DIM}D, auto-tune γ, "
+          f"N_seeds={N_SEEDS}, MinSize={MIN_CLUSTER_SIZE}")
     print(f"  Tổng số cấu hình chạy thử: {total_runs}")
     print("="*80)
     t_start    = time.time()
@@ -504,8 +521,6 @@ def run_tuning(feat, N, gt_labels, english_labels, ds):
 
     for mutual in TUNING_MUTUAL_KNN_LIST:
         for k in TUNING_K_NEIGHBORS_LIST:
-            # Xây graph 1 lần cho mỗi (mutual, k) — dùng lại qua các threshold
-            # Nhưng threshold ảnh hưởng đến graph nên phải build riêng từng combo
             for thr in TUNING_THRESHOLD_LIST:
                 run_count += 1
                 print(f"\n  [{run_count:>2}/{total_runs}] "
@@ -513,19 +528,18 @@ def run_tuning(feat, N, gt_labels, english_labels, ds):
                 print("  " + "-"*60)
 
                 # Build graph
-                G, t_graph = build_knn_graph(feat, N, k, thr, mutual)
+                G, t_graph = build_knn_graph(feat_tuned, N, k, thr, mutual)
 
                 # Auto-tune resolution
-                resolution = 1.0
-                if AUTO_TUNE_RESOLUTION:
-                    resolution = auto_tune_resolution(G, len(np.unique(gt_labels)))
+                resolution = auto_tune_resolution(G, len(np.unique(gt_labels)))
 
                 # Multi-seed Louvain
                 louvain_labels, final_partition, t_louvain = \
-                    run_multi_seed_louvain(G, resolution, N)
+                    run_multi_seed_louvain(G, resolution, N, n_seeds=N_SEEDS)
 
                 # Merge small clusters
-                louvain_labels = merge_small_clusters(louvain_labels, feat)
+                louvain_labels = merge_small_clusters(louvain_labels, feat_tuned,
+                                                      min_size=MIN_CLUSTER_SIZE)
                 n_clusters     = len(np.unique(louvain_labels))
 
                 # Evaluate
@@ -621,8 +635,10 @@ def main():
     os.makedirs(os.path.join(OUTPUT_DIR, "cluster_images"), exist_ok=True)
 
     print(f"[INFO] Features  : {PRECOMPUTED_FEATURES_PATH}")
-    print(f"[INFO] PCA={USE_PCA} (dim={PCA_DIM}, whiten={PCA_WHITEN})")
-    print(f"[INFO] AutoTune={AUTO_TUNE_RESOLUTION}, N_seeds={N_SEEDS}, Alpha={ALPHA}")
+    print(f"[INFO] Alpha={ALPHA}")
+    print(f"[INFO] BASELINE : không PCA, γ=1.0, 1 seed, không merge")
+    print(f"[INFO] TUNED    : PCA={PCA_DIM}D whiten={PCA_WHITEN}, "
+          f"AutoTune=True, N_seeds={N_SEEDS}, MinSize={MIN_CLUSTER_SIZE}")
 
     # ── 1. Load ───────────────────────────────────────────────────────────────
     print("\n" + "="*80)
@@ -635,15 +651,22 @@ def main():
         print(f"Lỗi: Số mẫu features ({features.shape[0]}) ≠ dataset ({N}).")
         return
 
-    # ── 2. Preprocess ─────────────────────────────────────────────────────────
+    # ── 2. Preprocess cho từng phase ─────────────────────────────────────────
     print("\n" + "="*80)
     print("BƯỚC 2: TIỀN XỬ LÝ FEATURES")
     print("="*80)
-    feat_norm = preprocess_features(features)
+
+    # Baseline: chỉ L2 normalize
+    print("\n[Baseline] Chỉ L2 normalize (không PCA):")
+    feat_baseline = l2_normalize(features)
+
+    # Tuned: L2 normalize + PCA Whitening
+    print(f"\n[Tuned] L2 normalize + PCA Whitening {PCA_DIM}D:")
+    feat_tuned = preprocess_features_tuned(features)
 
     # ── 3. Phase 1 & 2 ───────────────────────────────────────────────────────
-    baseline_result = run_baseline(feat_norm, N, gt_labels, english_labels, ds)
-    tuned_result    = run_tuning(feat_norm, N, gt_labels, english_labels, ds)
+    baseline_result = run_baseline(features, N, gt_labels, english_labels, ds)
+    tuned_result    = run_tuning(feat_tuned, N, gt_labels, english_labels, ds)
 
     # ── 4. So sánh cuối ───────────────────────────────────────────────────────
     print("\n" + "="*80)
