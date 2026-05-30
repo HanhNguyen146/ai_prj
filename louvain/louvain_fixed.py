@@ -23,8 +23,9 @@ warnings.filterwarnings('ignore')
 # =============================================================================
 # CẤU HÌNH CHUNG
 # =============================================================================
-PRECOMPUTED_FEATURES_PATH = "features_no_umap.npy"   # (10980, 768), float32, L2-normalized
-KNN_METRIC                = 'cosine'
+PRECOMPUTED_FEATURES_PATH_TUNED    = "features_no_umap.npy"  # dùng cho Phase 2 (Tuned)
+PRECOMPUTED_FEATURES_PATH_BASELINE = "features.npy"           # dùng cho Phase 1 (Baseline)
+KNN_METRIC                         = 'cosine'
 
 # -----------------------------------------------------------------------------
 # THAM SỐ ĐIỀU HÒA ALPHA
@@ -99,11 +100,11 @@ def compute_score(ari, nmi, alpha=ALPHA):
 # =============================================================================
 # HÀM PHỤ TRỢ DÙNG CHUNG
 # =============================================================================
-def load_features_and_dataset():
+def load_features_and_dataset(features_path=PRECOMPUTED_FEATURES_PATH_TUNED):
     """Nạp features và dataset, trả về tuple đầy đủ."""
-    print(f"--> Đang nạp features từ {PRECOMPUTED_FEATURES_PATH}…")
+    print(f"--> Đang nạp features từ {features_path}…")
     t0       = time.time()
-    features = np.load(PRECOMPUTED_FEATURES_PATH)
+    features = np.load(features_path)
     print(f"--> Shape: {features.shape}  |  dtype: {features.dtype}  |  Time: {time.time()-t0:.2f}s")
 
     print("--> Đang tải dataset từ Hugging Face để lấy Ground Truth…")
@@ -634,7 +635,8 @@ def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(os.path.join(OUTPUT_DIR, "cluster_images"), exist_ok=True)
 
-    print(f"[INFO] Features  : {PRECOMPUTED_FEATURES_PATH}")
+    print(f"[INFO] Features Baseline : {PRECOMPUTED_FEATURES_PATH_BASELINE}")
+    print(f"[INFO] Features Tuned    : {PRECOMPUTED_FEATURES_PATH_TUNED}")
     print(f"[INFO] Alpha={ALPHA}")
     print(f"[INFO] BASELINE : không PCA, γ=1.0, 1 seed, không merge")
     print(f"[INFO] TUNED    : PCA={PCA_DIM}D whiten={PCA_WHITEN}, "
@@ -644,11 +646,20 @@ def main():
     print("\n" + "="*80)
     print("BƯỚC 1: NẠP DỮ LIỆU")
     print("="*80)
-    features, gt_raw, gt_labels, english_labels, ds, N, n_gt_classes = \
-        load_features_and_dataset()
 
-    if features.shape[0] != N:
-        print(f"Lỗi: Số mẫu features ({features.shape[0]}) ≠ dataset ({N}).")
+    # Load dataset (labels, metadata) — dùng chung cho cả 2 phase
+    print("\n[Baseline] Nạp features từ features.npy:")
+    features_baseline, gt_raw, gt_labels, english_labels, ds, N, n_gt_classes = \
+        load_features_and_dataset(PRECOMPUTED_FEATURES_PATH_BASELINE)
+
+    print("\n[Tuned] Nạp features từ features_no_umap.npy:")
+    features_tuned, *_ = load_features_and_dataset(PRECOMPUTED_FEATURES_PATH_TUNED)
+
+    if features_baseline.shape[0] != N:
+        print(f"Lỗi: Số mẫu features baseline ({features_baseline.shape[0]}) ≠ dataset ({N}).")
+        return
+    if features_tuned.shape[0] != N:
+        print(f"Lỗi: Số mẫu features tuned ({features_tuned.shape[0]}) ≠ dataset ({N}).")
         return
 
     # ── 2. Preprocess cho từng phase ─────────────────────────────────────────
@@ -656,16 +667,16 @@ def main():
     print("BƯỚC 2: TIỀN XỬ LÝ FEATURES")
     print("="*80)
 
-    # Baseline: chỉ L2 normalize
+    # Baseline: chỉ L2 normalize (dùng features.npy)
     print("\n[Baseline] Chỉ L2 normalize (không PCA):")
-    feat_baseline = l2_normalize(features)
+    feat_baseline = l2_normalize(features_baseline)
 
-    # Tuned: L2 normalize + PCA Whitening
+    # Tuned: L2 normalize + PCA Whitening (dùng features_no_umap.npy)
     print(f"\n[Tuned] L2 normalize + PCA Whitening {PCA_DIM}D:")
-    feat_tuned = preprocess_features_tuned(features)
+    feat_tuned = preprocess_features_tuned(features_tuned)
 
     # ── 3. Phase 1 & 2 ───────────────────────────────────────────────────────
-    baseline_result = run_baseline(features, N, gt_labels, english_labels, ds)
+    baseline_result = run_baseline(features_baseline, N, gt_labels, english_labels, ds)
     tuned_result    = run_tuning(feat_tuned, N, gt_labels, english_labels, ds)
 
     # ── 4. So sánh cuối ───────────────────────────────────────────────────────
