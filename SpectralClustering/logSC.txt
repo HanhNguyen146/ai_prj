@@ -1,120 +1,115 @@
-PS C:\Hanh\252\DA_AI> & C:\Users\nguye\AppData\Local\Programs\Python\Python313\python.exe c:/Hanh/252/DA_AI/SC.py
---> Đã nạp features baseline (features.npy): shape=(10980, 256), dtype=float64
---> Đã nạp features tuned (features_no_umap.npy): shape=(10980, 768), dtype=float32
---> Đang tải dataset từ Hugging Face để lấy Ground Truth...
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+--> Đã nạp đặc trưng (features_no_umap.npy): shape=(10980, 768)
+--> Đã nạp đặc trưng (features.npy): shape=(10980, 256)
+--> Đang tải Ground Truth...
+--> Đã nạp Ground Truth từ file cục bộ: ..\labels.npy
 
 ================================================================================
-PHASE 1: BASELINE (features.npy)
+PHASE 1: BASELINE
 ================================================================================
 
 [BASELINE RESULT]
   Params : n_neighbors=20, threshold=0.25, n_clusters=100
-  Graph  : 311186 cạnh | Thời gian xây đồ thị: 3.03s
-  Clustering Time: 62.40s
-  Metrics: ARI=0.0844 | NMI=0.5774 | Score=0.3309
+  Graph  : 82454 cạnh | Thời gian xây đồ thị: 1.93s
+  Clustering Time: 1.60s
+  Metrics: ARI=0.0013 | NMI=0.2336 | Score=0.1174
 ================================================================================
 --- CHI TIẾT TOP 5 CỤM LỚN NHẤT ---
-Cụm 1 (560 ảnh) -> Nhãn gốc chiếm đa số: 409 (Purity: 8.6%) | ID đại diện: [1346, 1347, 1348, 1349, 1358]
-Cụm 2 (511 ảnh) -> Nhãn gốc chiếm đa số: 600 (Purity: 2.2%) | ID đại diện: [14, 16, 19, 20, 21]
-Cụm 3 (497 ảnh) -> Nhãn gốc chiếm đa số: 111 (Purity: 4.8%) | ID đại diện: [2, 23, 28, 31, 32]
-Cụm 4 (446 ảnh) -> Nhãn gốc chiếm đa số: 703 (Purity: 15.7%) | ID đại diện: [49, 401, 3749, 4430, 4432]
-Cụm 5 (280 ảnh) -> Nhãn gốc chiếm đa số: 533 (Purity: 8.9%) | ID đại diện: [4434, 4435, 4437, 4459, 4464]
+Cụm 1 (8133 ảnh) -> Nhãn gốc chiếm đa số: 60 (Purity: 1.1%) | ID đại diện: [0, 1, 2, 5, 9]
+Cụm 2 (638 ảnh) -> Nhãn gốc chiếm đa số: 618 (Purity: 6.7%) | ID đại diện: [3, 4, 6, 18, 19]
+Cụm 3 (503 ảnh) -> Nhãn gốc chiếm đa số: 726 (Purity: 5.6%) | ID đại diện: [39, 805, 961, 962, 963]
+Cụm 4 (190 ảnh) -> Nhãn gốc chiếm đa số: 838 (Purity: 9.5%) | ID đại diện: [43, 46, 401, 403, 644]
+Cụm 5 (107 ảnh) -> Nhãn gốc chiếm đa số: 816 (Purity: 12.1%) | ID đại diện: [402, 467, 489, 664, 668]
 --------------------------------------------------------------------------------
---> Đã lưu 100 cụm ảnh vào 'Cluster_Results_SC_Baseline'.
---> Đã lưu đồ thị trực quan hóa vào 'SC_Baseline_Visualization.png'.
---> Tổng thời gian PHASE 1: 343.06s (Xuất ảnh: 222.06s, Trực quan hóa: 55.53s)
+--> Tổng thời gian PHASE 1: 3.55s
 
 ================================================================================
-PHASE 2: FULL TUNING (features_no_umap.npy)
+PHASE 2: TUNING
   Tổng số cấu hình chạy thử: 48
 ================================================================================
-  [ 1/48] n_nbrs=20, thr=0.1, K=200... ARI=0.1269 | NMI=0.6466 | Score=0.3867 (217.9s)
-  [ 2/48] n_nbrs=20, thr=0.1, K=500... ARI=0.1786 | NMI=0.7106 | Score=0.4446 (300.2s)
-  [ 3/48] n_nbrs=20, thr=0.1, K=700... ARI=0.1862 | NMI=0.7339 | Score=0.4600 (334.4s)
-  [ 4/48] n_nbrs=20, thr=0.1, K=1000... ARI=0.1889 | NMI=0.7588 | Score=0.4739 (568.5s)
-  [ 5/48] n_nbrs=20, thr=0.2, K=200... ARI=0.0757 | NMI=0.6265 | Score=0.3511 (79.1s)
-  [ 6/48] n_nbrs=20, thr=0.2, K=500... ARI=0.1424 | NMI=0.7074 | Score=0.4249 (116.8s)
-  [ 7/48] n_nbrs=20, thr=0.2, K=700... ARI=0.1679 | NMI=0.7312 | Score=0.4495 (179.7s)
-  [ 8/48] n_nbrs=20, thr=0.2, K=1000... ARI=0.1941 | NMI=0.7562 | Score=0.4751 (255.9s)
-  [ 9/48] n_nbrs=20, thr=0.25, K=200... ARI=0.0385 | NMI=0.5877 | Score=0.3131 (137.1s)
-  [10/48] n_nbrs=20, thr=0.25, K=500... ARI=0.1121 | NMI=0.6955 | Score=0.4038 (205.0s)
-  [11/48] n_nbrs=20, thr=0.25, K=700... ARI=0.1204 | NMI=0.7174 | Score=0.4189 (364.8s)
-  [12/48] n_nbrs=20, thr=0.25, K=1000... ARI=0.1561 | NMI=0.7450 | Score=0.4505 (421.3s)
-  [13/48] n_nbrs=20, thr=0.3, K=200... ARI=0.0433 | NMI=0.5628 | Score=0.3031 (143.4s)
-  [14/48] n_nbrs=20, thr=0.3, K=500... ARI=0.0591 | NMI=0.6525 | Score=0.3558 (166.5s)
-  [15/48] n_nbrs=20, thr=0.3, K=700... ARI=0.0376 | NMI=0.6767 | Score=0.3571 (156.2s)
-  [16/48] n_nbrs=20, thr=0.3, K=1000... ARI=0.0373 | NMI=0.7114 | Score=0.3744 (428.7s)
-  [17/48] n_nbrs=30, thr=0.1, K=200... ARI=0.1295 | NMI=0.6420 | Score=0.3857 (291.0s)
-  [18/48] n_nbrs=30, thr=0.1, K=500... ARI=0.1851 | NMI=0.7099 | Score=0.4475 (382.8s)
-  [19/48] n_nbrs=30, thr=0.1, K=700... ARI=0.1957 | NMI=0.7337 | Score=0.4647 (320.0s)
-  [20/48] n_nbrs=30, thr=0.1, K=1000... ARI=0.1908 | NMI=0.7577 | Score=0.4742 (440.4s)
-  [21/48] n_nbrs=30, thr=0.2, K=200... ARI=0.0716 | NMI=0.6224 | Score=0.3470 (65.3s)
-  [22/48] n_nbrs=30, thr=0.2, K=500... ARI=0.1457 | NMI=0.7072 | Score=0.4265 (98.7s)
-  [23/48] n_nbrs=30, thr=0.2, K=700... ARI=0.1656 | NMI=0.7286 | Score=0.4471 (132.0s)
-  [24/48] n_nbrs=30, thr=0.2, K=1000... ARI=0.1957 | NMI=0.7551 | Score=0.4754 (185.8s)
-  [25/48] n_nbrs=30, thr=0.25, K=200... ARI=0.0616 | NMI=0.6113 | Score=0.3365 (43.7s)
-  [26/48] n_nbrs=30, thr=0.25, K=500... ARI=0.1043 | NMI=0.6947 | Score=0.3995 (209.8s)
-  [27/48] n_nbrs=30, thr=0.25, K=700... ARI=0.1235 | NMI=0.7181 | Score=0.4208 (239.9s)
-  [28/48] n_nbrs=30, thr=0.25, K=1000... ARI=0.1567 | NMI=0.7462 | Score=0.4515 (140.3s)
-  [29/48] n_nbrs=30, thr=0.3, K=200... ARI=0.0438 | NMI=0.5683 | Score=0.3060 (117.5s)
-  [30/48] n_nbrs=30, thr=0.3, K=500... ARI=0.0419 | NMI=0.6513 | Score=0.3466 (136.9s)
-  [31/48] n_nbrs=30, thr=0.3, K=700... ARI=0.0438 | NMI=0.6796 | Score=0.3617 (168.8s)
-  [32/48] n_nbrs=30, thr=0.3, K=1000... ARI=0.0388 | NMI=0.7139 | Score=0.3764 (395.7s)
-  [33/48] n_nbrs=40, thr=0.1, K=200... ARI=0.1391 | NMI=0.6436 | Score=0.3913 (206.1s)
-  [34/48] n_nbrs=40, thr=0.1, K=500... ARI=0.1900 | NMI=0.7095 | Score=0.4498 (320.9s)
-  [35/48] n_nbrs=40, thr=0.1, K=700... ARI=0.1949 | NMI=0.7328 | Score=0.4638 (374.9s)
-  [36/48] n_nbrs=40, thr=0.1, K=1000... ARI=0.1906 | NMI=0.7563 | Score=0.4734 (509.4s)
-  [37/48] n_nbrs=40, thr=0.2, K=200... ARI=0.0719 | NMI=0.6238 | Score=0.3479 (60.4s)
-  [38/48] n_nbrs=40, thr=0.2, K=500... ARI=0.1464 | NMI=0.7068 | Score=0.4266 (98.0s)
-  [39/48] n_nbrs=40, thr=0.2, K=700... ARI=0.1680 | NMI=0.7301 | Score=0.4491 (131.9s)
-  [40/48] n_nbrs=40, thr=0.2, K=1000... ARI=0.1939 | NMI=0.7552 | Score=0.4745 (181.1s)
-  [41/48] n_nbrs=40, thr=0.25, K=200... ARI=0.0603 | NMI=0.6098 | Score=0.3350 (43.4s)
-  [42/48] n_nbrs=40, thr=0.25, K=500... ARI=0.1080 | NMI=0.6949 | Score=0.4015 (148.9s)
-  [43/48] n_nbrs=40, thr=0.25, K=700... ARI=0.1334 | NMI=0.7199 | Score=0.4266 (185.3s)
-  [44/48] n_nbrs=40, thr=0.25, K=1000... ARI=0.1369 | NMI=0.7434 | Score=0.4402 (295.4s)
-  [45/48] n_nbrs=40, thr=0.3, K=200... ARI=0.0524 | NMI=0.5723 | Score=0.3123 (118.4s)
-  [46/48] n_nbrs=40, thr=0.3, K=500... ARI=0.0505 | NMI=0.6528 | Score=0.3516 (146.1s)
-  [47/48] n_nbrs=40, thr=0.3, K=700... ARI=0.0320 | NMI=0.6566 | Score=0.3443 (84.3s)
-  [48/48] n_nbrs=40, thr=0.3, K=1000... ARI=0.0392 | NMI=0.7161 | Score=0.3776 (577.5s)
+  [ 1/48] n_nbrs=20, thr=0.1, K=200... ARI=0.1401 | NMI=0.6357 | Score=0.3879 (13.9s)
+  [ 2/48] n_nbrs=20, thr=0.1, K=500... ARI=0.1824 | NMI=0.7026 | Score=0.4425 (38.2s)
+  [ 3/48] n_nbrs=20, thr=0.1, K=700... ARI=0.1859 | NMI=0.7262 | Score=0.4560 (61.0s)
+  [ 4/48] n_nbrs=20, thr=0.1, K=1000... ARI=0.1789 | NMI=0.7483 | Score=0.4636 (118.1s)
+  [ 5/48] n_nbrs=20, thr=0.2, K=200... ARI=0.1401 | NMI=0.6357 | Score=0.3879 (15.8s)
+  [ 6/48] n_nbrs=20, thr=0.2, K=500... ARI=0.1823 | NMI=0.7026 | Score=0.4425 (41.5s)
+  [ 7/48] n_nbrs=20, thr=0.2, K=700... ARI=0.1859 | NMI=0.7262 | Score=0.4560 (68.4s)
+  [ 8/48] n_nbrs=20, thr=0.2, K=1000... ARI=0.1789 | NMI=0.7483 | Score=0.4636 (119.5s)
+  [ 9/48] n_nbrs=20, thr=0.25, K=200... ARI=0.1401 | NMI=0.6357 | Score=0.3879 (14.6s)
+  [10/48] n_nbrs=20, thr=0.25, K=500... ARI=0.1823 | NMI=0.7026 | Score=0.4425 (40.7s)
+  [11/48] n_nbrs=20, thr=0.25, K=700... ARI=0.1859 | NMI=0.7262 | Score=0.4560 (76.1s)
+  [12/48] n_nbrs=20, thr=0.25, K=1000... ARI=0.1789 | NMI=0.7483 | Score=0.4636 (125.2s)
+  [13/48] n_nbrs=20, thr=0.3, K=200... ARI=0.1376 | NMI=0.6341 | Score=0.3859 (15.7s)
+  [14/48] n_nbrs=20, thr=0.3, K=500... ARI=0.1829 | NMI=0.7031 | Score=0.4430 (45.6s)
+  [15/48] n_nbrs=20, thr=0.3, K=700... ARI=0.1848 | NMI=0.7263 | Score=0.4555 (64.4s)
+  [16/48] n_nbrs=20, thr=0.3, K=1000... ARI=0.1787 | NMI=0.7481 | Score=0.4634 (115.9s)
+  [17/48] n_nbrs=30, thr=0.1, K=200... ARI=0.1443 | NMI=0.6313 | Score=0.3878 (17.0s)
+  [18/48] n_nbrs=30, thr=0.1, K=500... ARI=0.1861 | NMI=0.7009 | Score=0.4435 (48.7s)
+  [19/48] n_nbrs=30, thr=0.1, K=700... ARI=0.1912 | NMI=0.7237 | Score=0.4574 (76.9s)
+  [20/48] n_nbrs=30, thr=0.1, K=1000... ARI=0.1812 | NMI=0.7457 | Score=0.4635 (125.3s)
+  [21/48] n_nbrs=30, thr=0.2, K=200... ARI=0.1443 | NMI=0.6313 | Score=0.3878 (17.2s)
+  [22/48] n_nbrs=30, thr=0.2, K=500... ARI=0.1861 | NMI=0.7009 | Score=0.4435 (47.0s)
+  [23/48] n_nbrs=30, thr=0.2, K=700... ARI=0.1912 | NMI=0.7237 | Score=0.4574 (72.8s)
+  [24/48] n_nbrs=30, thr=0.2, K=1000... ARI=0.1807 | NMI=0.7452 | Score=0.4629 (124.1s)
+  [25/48] n_nbrs=30, thr=0.25, K=200... ARI=0.1442 | NMI=0.6313 | Score=0.3877 (16.2s)
+  [26/48] n_nbrs=30, thr=0.25, K=500... ARI=0.1863 | NMI=0.7009 | Score=0.4436 (45.8s)
+  [27/48] n_nbrs=30, thr=0.25, K=700... ARI=0.1912 | NMI=0.7237 | Score=0.4574 (74.1s)
+  [28/48] n_nbrs=30, thr=0.25, K=1000... ARI=0.1814 | NMI=0.7457 | Score=0.4636 (131.7s)
+  [29/48] n_nbrs=30, thr=0.3, K=200... ARI=0.1444 | NMI=0.6315 | Score=0.3879 (18.0s)
+  [30/48] n_nbrs=30, thr=0.3, K=500... ARI=0.1865 | NMI=0.7014 | Score=0.4439 (52.3s)
+  [31/48] n_nbrs=30, thr=0.3, K=700... ARI=0.1917 | NMI=0.7238 | Score=0.4577 (84.3s)
+  [32/48] n_nbrs=30, thr=0.3, K=1000... ARI=0.1802 | NMI=0.7446 | Score=0.4624 (156.2s)
+  [33/48] n_nbrs=40, thr=0.1, K=200... ARI=0.1461 | NMI=0.6308 | Score=0.3884 (29.8s)
+  [34/48] n_nbrs=40, thr=0.1, K=500... ARI=0.1882 | NMI=0.6995 | Score=0.4439 (90.2s)
+  [35/48] n_nbrs=40, thr=0.1, K=700... ARI=0.1895 | NMI=0.7212 | Score=0.4553 (141.8s)
+  [36/48] n_nbrs=40, thr=0.1, K=1000... ARI=0.1817 | NMI=0.7428 | Score=0.4622 (237.6s)
+  [37/48] n_nbrs=40, thr=0.2, K=200... ARI=0.1461 | NMI=0.6308 | Score=0.3884 (33.0s)
+  [38/48] n_nbrs=40, thr=0.2, K=500... ARI=0.1882 | NMI=0.6995 | Score=0.4439 (89.4s)
+  [39/48] n_nbrs=40, thr=0.2, K=700... ARI=0.1895 | NMI=0.7212 | Score=0.4553 (100.9s)
+  [40/48] n_nbrs=40, thr=0.2, K=1000... ARI=0.1817 | NMI=0.7428 | Score=0.4622 (241.4s)
+  [41/48] n_nbrs=40, thr=0.25, K=200... ARI=0.1459 | NMI=0.6303 | Score=0.3881 (25.7s)
+  [42/48] n_nbrs=40, thr=0.25, K=500... ARI=0.1876 | NMI=0.6996 | Score=0.4436 (72.9s)
+  [43/48] n_nbrs=40, thr=0.25, K=700... ARI=0.1892 | NMI=0.7212 | Score=0.4552 (148.8s)
+  [44/48] n_nbrs=40, thr=0.25, K=1000... ARI=0.1821 | NMI=0.7430 | Score=0.4625 (208.5s)
+  [45/48] n_nbrs=40, thr=0.3, K=200... ARI=0.1461 | NMI=0.6306 | Score=0.3884 (19.1s)
+  [46/48] n_nbrs=40, thr=0.3, K=500... ARI=0.1875 | NMI=0.6997 | Score=0.4436 (68.5s)
+  [47/48] n_nbrs=40, thr=0.3, K=700... ARI=0.1919 | NMI=0.7216 | Score=0.4568 (133.0s)
+  [48/48] n_nbrs=40, thr=0.3, K=1000... ARI=0.1804 | NMI=0.7421 | Score=0.4612 (220.8s)
 
 ==========================================================================================
 TOP 5 CẤU HÌNH TỐT NHẤT
  n_nbrs |   thr |     K |      ARI |      NMI |    Score |    Time |    edges
 --------------------------------------------------------------------------------
-     30 |   0.2 |  1000 |   0.1957 |   0.7551 |   0.4754 |  185.8s |   158442 ◄ BEST
-     20 |   0.2 |  1000 |   0.1941 |   0.7562 |   0.4751 |  255.9s |   149948
-     40 |   0.2 |  1000 |   0.1939 |   0.7552 |   0.4745 |  181.1s |   159948
-     30 |   0.1 |  1000 |   0.1908 |   0.7577 |   0.4742 |  440.4s |   402504
-     20 |   0.1 |  1000 |   0.1889 |   0.7588 |   0.4739 |  568.5s |   273626
+     20 |   0.1 |  1000 |   0.1789 |   0.7483 |   0.4636 |  118.1s |   311186 ◄ BEST
+     20 |   0.2 |  1000 |   0.1789 |   0.7483 |   0.4636 |  119.5s |   311186
+     20 |  0.25 |  1000 |   0.1789 |   0.7483 |   0.4636 |  125.2s |   311186
+     30 |  0.25 |  1000 |   0.1814 |   0.7457 |   0.4636 |  131.7s |   462502
+     30 |   0.1 |  1000 |   0.1812 |   0.7457 |   0.4635 |  125.3s |   462542
 ==========================================================================================
 
 [BEST TUNED CONFIGURATION]
-  Params : n_neighbors=30, threshold=0.2, n_clusters=1000
-  Graph  : 158442 cạnh
-  Metrics: ARI=0.1957 | NMI=0.7551 | Score=0.4754
+  Params : n_neighbors=20, threshold=0.1, n_clusters=1000
+  Graph  : 311186 cạnh
+  Metrics: ARI=0.1789 | NMI=0.7483 | Score=0.4636
 ==========================================================================================
 --- CHI TIẾT TOP 5 CỤM LỚN NHẤT ---
-Cụm 1 (94 ảnh) -> Nhãn gốc chiếm đa số: 909 (Purity: 16.0%) | ID đại diện: [4459, 4464, 4496, 4885, 4887]
-Cụm 2 (82 ảnh) -> Nhãn gốc chiếm đa số: 790 (Purity: 9.8%) | ID đại diện: [506, 4435, 4452, 4465, 4550]
-Cụm 3 (82 ảnh) -> Nhãn gốc chiếm đa số: 703 (Purity: 24.4%) | ID đại diện: [4718, 4719, 4720, 4721, 4722]
-Cụm 4 (73 ảnh) -> Nhãn gốc chiếm đa số: 175 (Purity: 9.6%) | ID đại diện: [1670, 1698, 1823, 1824, 1825]
-Cụm 5 (72 ảnh) -> Nhãn gốc chiếm đa số: 703 (Purity: 13.9%) | ID đại diện: [4436, 4441, 4468, 4638, 4922]
+Cụm 1 (25 ảnh) -> Nhãn gốc chiếm đa số: 126 (Purity: 8.0%) | ID đại diện: [16, 251, 423, 543, 621]
+Cụm 2 (25 ảnh) -> Nhãn gốc chiếm đa số: 996 (Purity: 16.0%) | ID đại diện: [108, 197, 265, 283, 398]
+Cụm 3 (24 ảnh) -> Nhãn gốc chiếm đa số: 25 (Purity: 75.0%) | ID đại diện: [143, 145, 146, 147, 152]
+Cụm 4 (24 ảnh) -> Nhãn gốc chiếm đa số: 72 (Purity: 91.7%) | ID đại diện: [998, 999, 1000, 1001, 1002]
+Cụm 5 (24 ảnh) -> Nhãn gốc chiếm đa số: 458 (Purity: 87.5%) | ID đại diện: [4785, 4786, 5005, 5007, 5008]
 --------------------------------------------------------------------------------
---> Đã lưu 1000 cụm ảnh vào 'Cluster_Results_SC_Tuned'.
---> Đã lưu đồ thị trực quan hóa vào 'SC_Tuned_Visualization.png'.
---> Tổng thời gian PHASE 2: 11220.15s (Xuất ảnh: 224.78s, Trực quan hóa: 44.01s)
+--> Tổng thời gian PHASE 2: 3978.66s
 
 ================================================================================
 SO SÁNH BASELINE vs BEST TUNED  (Score = 0.5×ARI + 0.5×NMI)
                               BASELINE   BEST TUNED      DELTA
 -----------------------------------------------------------------
-  n_neighbors                      20           30
-  threshold                      0.25          0.2
+  n_neighbors                      20           20
+  threshold                      0.25          0.1
   n_clusters                      100         1000
-  ARI                          0.0844       0.1957    +0.1114
-  NMI                          0.5774       0.7551    +0.1776
-  Score                        0.3309       0.4754    +0.1445
+  ARI                          0.0013       0.1789    +0.1776
+  NMI                          0.2336       0.7483    +0.5147
+  Score                        0.1174       0.4636    +0.3462
 ================================================================================
 
---> TỔNG THỜI GIAN CHẠY TOÀN BỘ CHƯƠNG TRÌNH: 3 giờ 15 phút 48.56 giây
+--> TỔNG THỜI GIAN CHẠY TOÀN BỘ CHƯƠNG TRÌNH: 1 giờ 6 phút 22.26 giây
