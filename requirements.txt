@@ -1,0 +1,28 @@
+# Thư viện dùng chung
+numpy
+pandas
+scikit-learn
+scipy
+networkx
+matplotlib
+seaborn
+tqdm
+Pillow
+datasets
+
+# Trích xuất đặc trưng (CLIP)
+torch
+transformers
+
+# Thuật toán Louvain
+python-louvain
+
+# Thuật toán Leiden
+igraph
+leidenalg
+
+# Thuật toán Infomap
+infomap
+
+# Trực quan hóa UMAP
+umap-learn
