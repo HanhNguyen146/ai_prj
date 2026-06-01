@@ -112,9 +112,3 @@ python main.py
 * **NMI (Normalized Mutual Information):** Đo lường lượng thông tin chung giữa phân cụm và nhãn gốc.
 * **Purity:** Độ tinh khiết của các cụm được phát hiện.
 * **Execution Time (Thời gian chạy):** Thời gian dựng đồ thị k-NN và thời gian phân cụm của thuật toán.
-
----
-
-## ⚠️ Lưu ý quan trọng khi nộp bài và Push lên GitHub
-1. **Tránh lỗi "thư mục xám":** Dự án này đã được kiểm tra và chỉ sử dụng một cấu hình Git duy nhất tại thư mục gốc. **Không** khởi tạo thêm lệnh `git init` bên trong các thư mục con (`sc`, `louvain`, `leiden`, `infomap`) để tránh làm lỗi hiển thị mã nguồn trên GitHub.
-2. **File dung lượng lớn (.npy):** Khuyến khích thêm các file `.npy` dung lượng lớn vào tệp `.gitignore` khi nộp lên GitHub để tránh vượt quá giới hạn file của GitHub (100MB) và giúp đẩy code nhanh hơn.
